@@ -22,6 +22,12 @@ func TestUsernameTaken(t *testing.T) {
 	}
 }
 
+func TestCountUsers(t *testing.T) {
+	if CountUsers() != 1 {
+		t.Error("didn't count users as expected")
+	}
+}
+
 func TestUserRead(t *testing.T) {
 	user := defaultUser
 	user.Read()

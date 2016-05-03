@@ -16,11 +16,14 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	SStore = &SessionStore{CookieName: "vtr_gsp_session", sessions: make(map[string]Session), duration: d}
+	SStore = &SessionStore{CookieName: "vtr_gsp_session", MaxAge: int(d.Seconds()), sessions: make(map[string]Session), duration: d}
 }
 
 type SessionStore struct {
+	// CookieName is the name of the cookie containing the session's id.
 	CookieName string
+	// MaxAge is the duration the session is valid in seconds to be set with the cookie.
+	MaxAge int
 
 	sync.RWMutex
 	sessions map[string]Session

@@ -1,0 +1,36 @@
+html, body{
+	margin: 0px;
+	padding: 0px;
+	font-family: Arial;
+}
+div#content{
+	width: 1000px;
+	margin: 0px auto;
+}
+h1{
+	text-align: center;
+}
+
+div.message{
+	padding: 10px;
+	border-radius: 5px;
+	margin: 5px 0px;
+	color: white;
+}
+
+div.message.positive{
+	background-color: green;
+}
+div.message.negative{
+	background-color: red;
+}
+
+form input{
+	display: block;
+	border: 1px solid #e9e9ff;
+	border-radius: 10px;
+	padding: 10px;
+	width: 240px;
+	margin: 10px auto;
+	font-size: 18px;
+}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+{{template "title" .}}
+<link rel="stylesheet" href="static/styles/base.css">
+</head>
+<body>
+{{template "scripts" .}}
+{{template "headbar" .}}
+<div id="content">
+{{if .}}
+{{range .Messages}}
+<div class="message {{if .Positive}}positive{{else}}negative{{end}}">{{.Text}}</div>{{end}}
+{{end}}
+{{template "content" .}}
+</div>
+</body>
+</html>
+
+{{define "scripts"}}{{end}}
+{{define "headbar"}}{{end}}
