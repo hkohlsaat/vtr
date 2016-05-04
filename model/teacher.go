@@ -12,6 +12,12 @@ func (teacher *Teacher) Create() {
 	}
 }
 
+func ReadAllTeachers() []Teacher {
+	var teachers []Teacher
+	db.Find(&teachers)
+	return teachers
+}
+
 func (teacher *Teacher) Read() {
 	var readTeacher Teacher
 	db.Where(teacher).First(&readTeacher)

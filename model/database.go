@@ -1,3 +1,7 @@
+// Package model provides access to the models and separates the database management
+// from the business logic of adding new users for example.
+// The models usually use the CRUD methods Create, Read, Update and Delete. See their
+// documentation for particular information.
 package model
 
 import (

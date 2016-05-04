@@ -42,6 +42,16 @@ func TestUserGetWithPassword(t *testing.T) {
 	if err != nil || user == defaultUser {
 		t.Error("didn't read with password")
 	}
+	user = defaultUser
+	err = user.GetWithPassword("123456")
+	if err != ErrNoMatchNamePassword {
+		t.Error("didn't recognise user password mismatch")
+	}
+	user = User{Name: "wrongname"}
+	err = user.GetWithPassword(password)
+	if err != ErrNoSuchUser {
+		t.Error("didn't recognise unknown user")
+	}
 }
 
 func TestUserUpdate(t *testing.T) {

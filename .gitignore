@@ -1,2 +1,4 @@
 # ignore sqlite database files
 *.db
+
+cover.out

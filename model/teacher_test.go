@@ -35,6 +35,20 @@ func TestTeacherUpdate(t *testing.T) {
 	}
 }
 
+func TestReadAllTeachers(t *testing.T) {
+	teachers := []*Teacher{&Teacher{Short: "t1", Name: "Test1", Sex: 'm'}, &Teacher{Short: "t2", Name: "Test2", Sex: 'm'}}
+	teachers[0].Create()
+	teachers[1].Create()
+
+	allTeachers := ReadAllTeachers()
+	if len(allTeachers) != 3 {
+		t.Error("didn't read three teachers")
+	}
+
+	teachers[0].Delete()
+	teachers[1].Delete()
+}
+
 func TestTeacherDelete(t *testing.T) {
 	teacher := &Teacher{Short: "Ar", Name: "Armann", Sex: 'm'}
 	teacher.Create()
