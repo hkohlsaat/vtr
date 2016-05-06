@@ -1,0 +1,32 @@
+{{define "head"}}<title>Neuer Lehrer</title>
+<script src="/static/scripts/jquery.js"></script>
+<link rel="stylesheet" href="/static/styles/teacher/new.css">{{end}}
+{{define "content"}}
+<h1>{{.Short}} ändern</h1>
+<form method="/teacher/{{.Short}}" enctype="application/x-www-form-urlencoded">
+	<select name="sex">
+		<option value="m" {{if eq .Sex 'm'}}selected="selected"{{end}}>Herr</option>
+		<option value="w" {{if eq .Sex 'w'}}selected="selected"{{end}}>Frau</option>
+	</select>
+	<input type="text" name="short" placeholder="Kürzel" value="{{.Short}}"/>
+	<input type="text" name="name" placeholder="Name" value="{{.Name}}"/><br>
+	<input id="save" type="submit" value="Speichern" />
+</form>
+<script>
+$(document).ready(function() {
+	$('#save').click(function() {
+		var url = $('form').attr('method');
+		$.ajax({
+			url: url,
+			type: 'PUT',
+			data: $('form').serialize(),
+			success: function(resp) {
+				window.location.href = resp
+			}
+		});
+		return false
+	});
+});
+</script>
+{{end}}
+

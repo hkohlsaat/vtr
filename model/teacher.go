@@ -26,8 +26,19 @@ func (teacher *Teacher) Read() {
 	}
 }
 
+func (teacher *Teacher) Exists() bool {
+	teacher.Read()
+	if teacher.Name == "" {
+		return false
+	}
+	return true
+}
+
 func (teacher *Teacher) Update() {
 	db.Table("teachers").Where(&Teacher{Short: teacher.Short}).Update(*teacher)
+}
+func (teacher *Teacher) UpdateShort(short string) {
+	db.Table("teachers").Where(&Teacher{Short: short}).Update(*teacher)
 }
 
 func (teacher *Teacher) Delete() {

@@ -1,0 +1,15 @@
+{{define "head"}}<title>Neuer Lehrer</title>
+<link rel="stylesheet" href="/static/styles/teacher/new.css">{{end}}
+{{define "content"}}
+<h1>Neuer Lehrer</h1>
+<form action="/teachers" method="post" enctype="application/x-www-form-urlencoded">
+	<select name="sex">
+		<option value="m">Herr</option>
+		<option value="w">Frau</option>
+	</select>
+	<input id="short" type="text" name="short" placeholder="Kürzel" />
+	<input type="text" name="name" placeholder="Name" /><br>
+	<input id="save" type="submit" value="Speichern" />
+</form>
+{{end}}
+

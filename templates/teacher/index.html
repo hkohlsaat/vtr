@@ -1,0 +1,35 @@
+{{define "head"}}<title>Lehrer</title>
+<script src="/static/scripts/jquery.js"></script>{{end}}
+{{define "content"}}
+<h1>Lehrer</h1>
+<table>
+	<tr><th>Kürzel</th><th>Name</th><th></th><th></th></tr>
+	{{range .Teachers}}
+	<tr>
+		<td>{{.Short}}</td>
+		<td>{{if eq .Sex 'm'}}Herr {{else}}Frau {{end}}{{.Name}}</td>
+		<td><a href="/teacher/{{.Short}}/edit">Bearbeiten</a></td>
+		<td><a href="/teacher/{{.Short}}" class="delete">Löschen</a></td>
+	</tr>{{end}}
+</table>
+<a href="/teachers/new">Neuer Lehrer</a>
+<script>
+$(document).ready(function() {
+	$('.delete').click(function() {
+		var url = $(this).attr('href');
+		var calling = $(this);
+		var fadeout = function() {calling.closest('tr').fadeOut(1000);}
+		if (confirm("Wirklich löschen?")) {
+			$.ajax({
+				url: url,
+				type: 'DELETE',
+				success: fadeout
+			});
+		}
+		return false
+	});
+});
+</script>
+
+{{end}}
+

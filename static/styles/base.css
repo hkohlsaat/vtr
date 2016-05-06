@@ -34,3 +34,12 @@ form input{
 	margin: 10px auto;
 	font-size: 18px;
 }
+
+table{
+	margin: 50px auto;
+	border-collapse: collapse;
+}
+table th, table td{
+	padding: 5px 20px;
+	text-align: left;
+}
