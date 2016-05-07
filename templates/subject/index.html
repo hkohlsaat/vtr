@@ -1,0 +1,36 @@
+{{define "head"}}<title>Fach</title>
+<script src="/static/scripts/jquery.js"></script>{{end}}
+{{define "content"}}
+<h1>Fach</h1>
+<table>
+	<tr><th>Kürzel</th><th>Name</th><th>Kurs</th><th></th><th></th></tr>
+	{{range .Subjects}}
+	<tr>
+		<td>{{.Short}}</td>
+		<td>{{.Name}}</td>
+		<td>{{if .SplitClass}}ja{{else}}nein{{end}}</td>
+		<td><a href="/subject/{{.Short}}/edit">Bearbeiten</a></td>
+		<td><a href="/subject/{{.Short}}" class="delete">Löschen</a></td>
+	</tr>{{end}}
+</table>
+<a href="/subjects/new">Neues Fach</a>
+<script>
+$(document).ready(function() {
+	$('.delete').click(function() {
+		var url = $(this).attr('href');
+		var calling = $(this);
+		var fadeout = function() {calling.closest('tr').fadeOut(1000);}
+		if (confirm("Wirklich löschen?")) {
+			$.ajax({
+				url: url,
+				type: 'DELETE',
+				success: fadeout
+			});
+		}
+		return false
+	});
+});
+</script>
+
+{{end}}
+

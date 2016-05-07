@@ -1,0 +1,29 @@
+{{define "head"}}<title>{{.Name}} ändern</title>
+<script src="/static/scripts/jquery.js"></script>
+<link rel="stylesheet" href="/static/styles/subject/new.css">{{end}}
+{{define "content"}}
+<h1>{{.Name}} ändern</h1>
+<form method="/subject/{{.Short}}" enctype="application/x-www-form-urlencoded">
+	<input id="short" type="text" name="short" placeholder="Kürzel" value="{{.Short}}"/>
+	<input type="text" name="name" placeholder="Name" value="{{.Name}}"/>
+	<input id="check" type="checkbox" name="splitClass" value="true" {{if .SplitClass}}checked{{end}}/> Verschiedene Kurse gleichzeitig<br>
+	<input id="save" type="submit" value="Speichern" />
+</form>
+<script>
+$(document).ready(function() {
+	$('#save').click(function() {
+		var url = $('form').attr('method');
+		$.ajax({
+			url: url,
+			type: 'PUT',
+			data: $('form').serialize(),
+			success: function(resp) {
+				window.location.href = resp
+			}
+		});
+		return false
+	});
+});
+</script>
+{{end}}
+

@@ -1,0 +1,26 @@
+form{
+	text-align: center;
+}
+
+form input{
+	display: inline;
+	margin: auto;
+}
+
+select{
+	font-size: 18px;
+	padding: 10px;
+	border-radius: 10px;
+	border: 1px solid #e9e9ff;
+}
+
+input#short{
+	width: 50px;
+}
+input#check{
+	width: auto;
+	margin-left: 10px;
+}
+input#save{
+	margin-top: 10px;
+}

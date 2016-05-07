@@ -24,6 +24,14 @@ func main() {
 	router.PUT("/teacher/:short", controller.UpdateTeacher)
 	router.DELETE("/teacher/:short", controller.DeleteTeacher)
 
+	router.GET("/subjects", controller.GetSubjects)
+	router.GET("/subjects/new", controller.NewSubject)
+	router.POST("/subjects", controller.CreateSubject)
+	router.GET("/subject/:short", controller.GetSubject)
+	router.GET("/subject/:short/edit", controller.EditSubject)
+	router.PUT("/subject/:short", controller.UpdateSubject)
+	router.DELETE("/subject/:short", controller.DeleteSubject)
+
 	router.ServeFiles("/static/*filepath", http.Dir("static/"))
 
 	http.ListenAndServe(":9000", router)

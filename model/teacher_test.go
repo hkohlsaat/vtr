@@ -25,6 +25,17 @@ func TestTeacherRead(t *testing.T) {
 	}
 }
 
+func TestTeacherExists(t *testing.T) {
+	teacher := &Teacher{Short: "Wd"}
+	if !teacher.Exists() {
+		t.Error("didn't recognise existing teacher")
+	}
+	teacher = &Teacher{Short: "No"}
+	if teacher.Exists() {
+		t.Error("did recognise non existing teacher")
+	}
+}
+
 func TestTeacherUpdate(t *testing.T) {
 	teacher := &Teacher{Short: "Wd", Name: "Wedenbruck", Sex: 'm'}
 	teacher.Update()
@@ -32,6 +43,21 @@ func TestTeacherUpdate(t *testing.T) {
 	teacher.Read()
 	if teacher.Name != "Wedenbruck" || teacher.Sex != 'm' {
 		t.Fail()
+	}
+}
+
+func TestTeacherUpdateShort(t *testing.T) {
+	teacher := &Teacher{Short: "Wb", Name: "Wedenburg", Sex: 'w'}
+	teacher.UpdateShort("Wd")
+	teacher = &Teacher{Short: "Wd"}
+	teacher.Read()
+	if teacher.Name != "" {
+		t.Error("didn't update short")
+	}
+	teacher = &Teacher{Short: "Wb"}
+	teacher.Read()
+	if teacher.Name != "Wedenburg" || teacher.Sex != 'w' {
+		t.Error("didn't update teacher correctly")
 	}
 }
 

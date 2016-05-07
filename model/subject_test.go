@@ -25,6 +25,17 @@ func TestSubjectRead(t *testing.T) {
 	}
 }
 
+func TestSubjectExists(t *testing.T) {
+	subject := &Subject{Short: "Zk"}
+	if !subject.Exists() {
+		t.Error("didn't recognise existing subject")
+	}
+	subject = &Subject{Short: "No"}
+	if subject.Exists() {
+		t.Error("did recognise non existing subject")
+	}
+}
+
 func TestSubjectUpdate(t *testing.T) {
 	subject := &Subject{Short: "Zk", Name: "Zehnkampf", SplitClass: true}
 	subject.Update()
@@ -33,6 +44,35 @@ func TestSubjectUpdate(t *testing.T) {
 	if subject.Name != "Zehnkampf" || subject.SplitClass != true {
 		t.Fail()
 	}
+}
+
+func TestSubjectUpdateShort(t *testing.T) {
+	subject := &Subject{Short: "Hh", Name: "Hundehutte", SplitClass: false}
+	subject.UpdateShort("Zk")
+	subject = &Subject{Short: "Zk"}
+	subject.Read()
+	if subject.Name != "" {
+		t.Error("didn't update short")
+	}
+	subject = &Subject{Short: "Hh"}
+	subject.Read()
+	if subject.Name != "Hundehutte" || (subject.SplitClass != false) {
+		t.Errorf("didn't update subject correctly: %+v", *subject)
+	}
+}
+
+func TestReadAllSubjects(t *testing.T) {
+	subjects := []*Subject{&Subject{Short: "t1", Name: "Test1", SplitClass: false}, &Subject{Short: "t2", Name: "Test2", SplitClass: false}}
+	subjects[0].Create()
+	subjects[1].Create()
+
+	allSubjects := ReadAllSubjects()
+	if len(allSubjects) != 3 {
+		t.Error("didn't read three subjects")
+	}
+
+	subjects[0].Delete()
+	subjects[1].Delete()
 }
 
 func TestSubjectDelete(t *testing.T) {

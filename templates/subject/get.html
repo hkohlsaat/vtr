@@ -1,0 +1,8 @@
+{{define "head"}}<title>{{.Name}}</title>
+<link rel="stylesheet" href="/static/styles/subject/new.css">{{end}}
+{{define "content"}}
+<h1>Facheintrag</h1>
+{{.Name}}, {{.Short}}, {{if .SplitClass}}{{else}}nicht {{end}}gleichzeitig in verschiedenen Kursen unterrichtet<br><br>
+<a href="/subject/{{.Short}}/edit">Bearbeiten</a><br><br>
+<a href="/subjects">Übersicht</a>{{end}}
+

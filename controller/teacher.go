@@ -12,14 +12,25 @@ import (
 )
 
 func GetTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	showTeachers(w, r, "")
 }
 
 func NewTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	template, err := template.ParseFiles("templates/base.html", "templates/teacher/new.html")
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
+
 	err = template.Execute(w, nil)
 	if err != nil {
 		log.Printf("error: %v\n", err)
@@ -27,6 +38,11 @@ func NewTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	// Parse and validate.
 	short, name, sex := parseTeacherData(r)
 	valid, message := validateTeacherData(short, name, sex)
@@ -44,6 +60,7 @@ func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 		if err != nil {
 			log.Printf("error: %v\n", err)
 		}
+
 		err = template.Execute(w, simpleMessage(message, false))
 		if err != nil {
 			log.Printf("error: %v\n", err)
@@ -54,12 +71,18 @@ func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	// Create the teacher.
 	teacher := model.Teacher{Short: short, Name: name, Sex: sex}
 	teacher.Create()
+
 	// Render all teachers
 	message = fmt.Sprintf("%s wurde gespeichert.", short)
 	showTeachers(w, r, message)
 }
 
 func showTeachers(w http.ResponseWriter, r *http.Request, message string) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	// Prepare the template data with all teachers.
 	templateData := struct {
 		generalTemplateData
@@ -75,6 +98,7 @@ func showTeachers(w http.ResponseWriter, r *http.Request, message string) {
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
+
 	err = template.Execute(w, &templateData)
 	if err != nil {
 		log.Printf("error: %v\n", err)
@@ -82,6 +106,11 @@ func showTeachers(w http.ResponseWriter, r *http.Request, message string) {
 }
 
 func GetTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	short := html.EscapeString(params.ByName("short"))
 	teacher := model.Teacher{Short: short}
 	if !teacher.Exists() {
@@ -107,6 +136,11 @@ func GetTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params
 }
 
 func EditTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	short := html.EscapeString(params.ByName("short"))
 	teacher := model.Teacher{Short: short}
 	if !teacher.Exists() {
@@ -133,6 +167,11 @@ func EditTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Param
 }
 
 func UpdateTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	short := html.EscapeString(params.ByName("short"))
 	teacher := model.Teacher{Short: short}
 	if !teacher.Exists() {
@@ -156,6 +195,11 @@ func UpdateTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Par
 }
 
 func DeleteTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
 	short := html.EscapeString(params.ByName("short"))
 	teacher := model.Teacher{Short: short}
 	if teacher.Exists() {
