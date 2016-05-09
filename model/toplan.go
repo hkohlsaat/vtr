@@ -4,36 +4,31 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"io"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
 	"golang.org/x/text/encoding/charmap"
 )
 
-func ToPlan(rawdata []byte) (*Plan, error) {
-	data, err := charmap.ISO8859_1.NewDecoder().Bytes(rawdata)
+func ToPlan(uploadReader io.Reader) (*Plan, error) {
+	plan, err := decodePlan(uploadReader)
 	if err != nil {
-		data = rawData
-		log.Printf("Error decoding plan input to utf-8: %v\n", err)
+		return plan, err
 	}
 
-	rawplan := string(data)
+	refine(plan)
+	return plan, nil
+}
 
-	headStart := strings(rawplan, "<head>")
-	headEnd := strings(rawplan, "</head>") + 7
-	if headStart == -1 || headEnd-7 == -1 {
-		log.Printf("No head found in raw plan.\n")
-	} else {
-		rawplan = append(rawplan[:headStart], rawplan[headEnd:])
-	}
+func decodePlan(uploadReader io.Reader) (*Plan, error) {
+	encReader := charmap.ISO8859_1.NewDecoder().Reader(uploadReader)
 
-	re := regexp.MustCompile("(</?html>)|(</?body>)|(</?p>)|(</?br>)|(</?CENTER>)")
-	rawplan = re.ReplaceAllString(rawplan, "")
+	decoder := xml.NewDecoder(encReader)
+	decoder.Entity = xml.HTMLEntity
 
-	decoder := xml.NewDecoder(strings.NewReader(rawplan))
-	if err = moveToNext("font", decoder); err != nil {
+	if err := moveToNext("font", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for first \"font\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
@@ -42,9 +37,9 @@ func ToPlan(rawdata []byte) (*Plan, error) {
 	charData, _ := token.(xml.CharData)
 	createdString := string(charData[7:])
 	loc, _ := time.LoadLocation("Europe/Berlin")
-	created := time.ParseInLocation("02.06.2006 15:04", createdString, loc)
+	created, _ := time.ParseInLocation("02.06.2006 15:04", createdString, loc)
 
-	if err = moveToNext("div", decoder); err != nil {
+	if err = moveToNext("div", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for \"div\" with day of first part: %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
@@ -53,83 +48,100 @@ func ToPlan(rawdata []byte) (*Plan, error) {
 	charData, _ = token.(xml.CharData)
 	dayString := string(charData)
 	dayFormat := "2.6.2006"
-	day1 := time.ParseInLocation(dayFormat, strings.Split(" ")[0], loc)
+	day1, _ := time.ParseInLocation(dayFormat, strings.Split(dayString, " ")[0], loc)
 
-	if err = moveToNext("table", decoder); err != nil {
+	if err = moveToNext("table", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for first \"table\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("table", decoder); err != nil {
+	if err = moveToNext("table", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for second \"table\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("table", decoder); err != nil {
+	if err = moveToNext("table", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for third \"table\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("tr", decoder); err != nil {
+	if err = moveToNext("tr", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for first \"tr\" of the first plan table: %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("tr", decoder); err != nil {
+	if err = moveToNext("tr", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for second \"tr\" of the first plan table: %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
+	if err = moveToNext("tr", false, decoder); err != nil {
+		err = errors.New(fmt.Sprintf("Error searching for end of second \"tr\" of the first plan table: %v\n", err))
+		log.Println(err)
+		return &Plan{}, err
+	}
+
+	decoder.RawToken() // Skip xml.CharData.
+
 	firstPartSubstitutions := make([]Substitution, 0, 20)
 	token, err = decoder.RawToken()
 	_, ok := token.(xml.StartElement)
 	for ok && err == nil {
-		append(firstPartSubstitutions, readSubstitution(decoder))
+		firstPartSubstitutions = append(firstPartSubstitutions, readSubstitution(decoder))
+		decoder.RawToken()
 		token, err = decoder.RawToken()
 		_, ok = token.(xml.StartElement)
 	}
 
-	if err = moveToNext("div", decoder); err != nil {
+	if err = moveToNext("div", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for \"div\" with day of second part: %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
 	token, err = decoder.RawToken()
 	charData, _ = token.(xml.CharData)
-	dayString := string(charData)
-	dayFormat := "2.6.2006"
-	day2 := time.ParseInLocation(dayFormat, strings.Split(" ")[0], loc)
+	dayString = string(charData)
+	day2, _ := time.ParseInLocation(dayFormat, strings.Split(dayString, " ")[0], loc)
 
-	if err = moveToNext("table", decoder); err != nil {
+	if err = moveToNext("table", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for fourth \"table\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("table", decoder); err != nil {
+	if err = moveToNext("table", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for fifth \"table\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("table", decoder); err != nil {
+	if err = moveToNext("table", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for sixth \"table\": %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("tr", decoder); err != nil {
+	if err = moveToNext("tr", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for first \"tr\" of the second plan table: %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
-	if err = moveToNext("tr", decoder); err != nil {
+	if err = moveToNext("tr", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for second \"tr\" of the second plan table: %v\n", err))
 		log.Println(err)
 		return &Plan{}, err
 	}
+	if err = moveToNext("tr", false, decoder); err != nil {
+		err = errors.New(fmt.Sprintf("Error searching for end of second \"tr\" of the second plan table: %v\n", err))
+		log.Println(err)
+		return &Plan{}, err
+	}
+
+	decoder.RawToken() // Skip xml.CharData.
+
 	secondPartSubstitutions := make([]Substitution, 0, 20)
 	token, err = decoder.RawToken()
 	_, ok = token.(xml.StartElement)
 	for ok && err == nil {
-		append(secondPartSubstitutions, readSubstitution(decoder))
+		secondPartSubstitutions = append(secondPartSubstitutions, readSubstitution(decoder))
+		decoder.RawToken()
 		token, err = decoder.RawToken()
 		_, ok = token.(xml.StartElement)
 	}
@@ -143,70 +155,95 @@ func ToPlan(rawdata []byte) (*Plan, error) {
 }
 
 func readSubstitution(decoder *xml.Decoder) Substitution {
-	_, _ := decoder.RawToken()
-	token, _ := decoder.RawToken()
-	charData, _ := token.(xml.CharData)
-	class := string(charData)
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	token, _ = decoder.RawToken()
-	charData, _ = token.(xml.CharData)
-	periodString := string(charData)
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	token, _ = decoder.RawToken()
-	charData, _ = token.(xml.CharData)
-	substTeacherShort := string(charData)
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	token, _ = decoder.RawToken()
-	charData, _ = token.(xml.CharData)
-	instdTeacherShort := string(charData)
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	token, _ = decoder.RawToken()
-	charData, _ = token.(xml.CharData)
-	instdSubjectShort := string(charData)
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	token, _ = decoder.RawToken()
-	charData, _ = token.(xml.CharData)
-	kind := string(charData)
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	_, _ = decoder.RawToken()
-	_, _ = decoder.RawToken()
-
-	_, _ = decoder.RawToken()
-	token, _ = decoder.RawToken()
-	charData, _ = token.(xml.CharData)
-	text := string(charData)
+	var (
+		class             = readInformation(decoder) // Read class.
+		periodString      = readInformation(decoder) // Read period(s).
+		substTeacherShort = readInformation(decoder) // Read substitution teacher.
+		instdTeacherShort = readInformation(decoder) // Read instead teacher.
+		instdSubjectShort = readInformation(decoder) // Read instead subject.
+		kind              = readInformation(decoder) // Read kind.
+		_                 = readInformation(decoder) // Skip "Vtr. von".
+		text              = readInformation(decoder) // Read text.
+	)
+	// Close table row.
+	decoder.RawToken()
 
 	return Substitution{
 		Class:        class,
 		Period:       periodString,
 		SubstTeacher: Teacher{Short: substTeacherShort},
 		InstdTeacher: Teacher{Short: instdTeacherShort},
-		InstdSubject: Teacher{Short: instdSubjectShort},
+		InstdSubject: Subject{Short: instdSubjectShort},
 		Kind:         kind,
 		Text:         text}
 }
 
-func moveToNext(elementName string, decoder *xml.Decoder) error {
+func readInformation(decoder *xml.Decoder) string {
+	decoder.RawToken()
+	token, _ := decoder.RawToken()
+	if startElement, ok := token.(xml.StartElement); ok && startElement.Name.Local == "span" {
+		token, _ = decoder.RawToken()
+		defer decoder.RawToken()
+	}
+	charData, _ := token.(xml.CharData)
+	information := string(charData)
+	decoder.RawToken()
+	return information
+}
+
+func moveToNext(elementName string, se bool, decoder *xml.Decoder) error {
 	for {
 		token, err := decoder.RawToken()
 		if err != nil {
 			return err
 		}
-		if startElement, ok := token.(xml.StartElement); ok {
-			if startElement.Name.Lokal == elementName {
-				return nil
+		if se {
+			if startElement, ok := token.(xml.StartElement); ok {
+				if startElement.Name.Local == elementName {
+					return nil
+				}
+			}
+		} else {
+			if endElement, ok := token.(xml.EndElement); ok {
+				if endElement.Name.Local == elementName {
+					return nil
+				}
+			}
+		}
+	}
+}
+
+func refine(plan *Plan) {
+	const nbsp = "\u00A0"
+	for p, part := range plan.Parts {
+		for s, substitution := range part.Substitutions {
+			if substitution.Period == nbsp {
+				plan.Parts[p].Substitutions[s].Period = ""
+			}
+			if substitution.Class == nbsp {
+				plan.Parts[p].Substitutions[s].Class = ""
+			}
+			if substitution.SubstTeacher.Short == nbsp ||
+				substitution.SubstTeacher.Short == "+" || substitution.SubstTeacher.Short == "---" {
+				plan.Parts[p].Substitutions[s].SubstTeacher.Short = ""
+			} else {
+				substitution.SubstTeacher.Read()
+			}
+			if substitution.InstdTeacher.Short == nbsp {
+				plan.Parts[p].Substitutions[s].InstdTeacher.Short = ""
+			} else {
+				plan.Parts[p].Substitutions[s].InstdTeacher.Read()
+			}
+			if substitution.InstdSubject.Short == nbsp {
+				plan.Parts[p].Substitutions[s].InstdSubject.Short = ""
+			} else {
+				plan.Parts[p].Substitutions[s].InstdSubject.Read()
+			}
+			if substitution.Kind == nbsp {
+				plan.Parts[p].Substitutions[s].Kind = ""
+			}
+			if substitution.Text == nbsp {
+				plan.Parts[p].Substitutions[s].Text = ""
 			}
 		}
 	}

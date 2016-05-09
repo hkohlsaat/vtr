@@ -13,7 +13,7 @@ type Part struct {
 }
 
 type Substitution struct {
-	Period       int
+	Period       string
 	Class        string
 	SubstTeacher Teacher
 	InstdTeacher Teacher
