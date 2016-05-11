@@ -13,6 +13,10 @@ import (
 
 func PostPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	r.ParseMultipartForm(65536)
+	if r.Form.Get("passwort") != os.Args[2] {
+		http.Error(w, "falsches Passwort", http.StatusUnauthorized)
+		return
+	}
 	file, _, err := r.FormFile("vertretungsplan")
 	if err != nil {
 		log.Printf("error recieving file from upload: %v\n", err)
