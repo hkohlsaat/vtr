@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 
@@ -35,6 +36,8 @@ func main() {
 
 	router.GET("/plan", controller.GetPlan)
 	router.POST("/plan", controller.PostPlan)
+
+	router.GET("/deploy", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) { fmt.Fprint(w, "deploytest") })
 
 	router.ServeFiles("/static/*filepath", http.Dir("static/"))
 
