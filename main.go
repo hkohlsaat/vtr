@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/hkohlsaat/vtr/controller"
 
@@ -37,5 +38,6 @@ func main() {
 
 	router.ServeFiles("/static/*filepath", http.Dir("static/"))
 
-	http.ListenAndServe(":9000", router)
+	port := os.Args[1]
+	http.ListenAndServe(":"+port, router)
 }
