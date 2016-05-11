@@ -37,7 +37,7 @@ func main() {
 	router.GET("/plan", controller.GetPlan)
 	router.POST("/plan", controller.PostPlan)
 
-	router.GET("/deploy", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) { fmt.Fprint(w, "deploytest2") })
+	router.GET("/deploy", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) { fmt.Fprint(w, "deploytest3") })
 
 	router.ServeFiles("/static/*filepath", http.Dir("static/"))
 
