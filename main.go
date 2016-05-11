@@ -32,6 +32,7 @@ func main() {
 	router.PUT("/subject/:short", controller.UpdateSubject)
 	router.DELETE("/subject/:short", controller.DeleteSubject)
 
+	router.GET("/plan", controller.GetPlan)
 	router.POST("/plan", controller.PostPlan)
 
 	router.ServeFiles("/static/*filepath", http.Dir("static/"))

@@ -21,7 +21,7 @@ func PostPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	defer file.Close()
 
 	now := time.Now()
-	f, err := os.OpenFile(now.Format("2006-01-02-15-04-05"), os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile(now.Format("2006-01-02-15-04-05"), os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Printf("can't open file to save plan: %v\n", err)
 	} else {
@@ -29,8 +29,21 @@ func PostPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		io.Copy(f, file)
 	}
 
-	_ = "breakpoint"
 	file.Seek(0, 0)
 	plan, err := model.ToPlan(file)
-	log.Printf("%#v", *plan)
+	if err != nil {
+		log.Printf("can't make an object of the plan: %v\n", err)
+		return
+	}
+	plan.Create()
+}
+
+func GetPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	lastPlan := model.LastPlanName()
+	if lastPlan == "" {
+		http.NotFound(w, r)
+		return
+	} else {
+		http.ServeFile(w, r, lastPlan)
+	}
 }
