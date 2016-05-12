@@ -48,6 +48,7 @@ func GetPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		http.NotFound(w, r)
 		return
 	} else {
+		w.Header().Set("content-type", "application/json; charset=utf-8")
 		http.ServeFile(w, r, lastPlan)
 	}
 }

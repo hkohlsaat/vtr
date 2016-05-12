@@ -37,7 +37,7 @@ func decodePlan(uploadReader io.Reader) (*Plan, error) {
 	charData, _ := token.(xml.CharData)
 	createdString := string(charData[7:])
 	loc, _ := time.LoadLocation("Europe/Berlin")
-	created, _ := time.ParseInLocation("02.06.2006 15:04", createdString, loc)
+	created, _ := time.ParseInLocation("02.01.2006 15:04", createdString, loc)
 
 	if err = moveToNext("div", true, decoder); err != nil {
 		err = errors.New(fmt.Sprintf("Error searching for \"div\" with day of first part: %v\n", err))
@@ -47,7 +47,7 @@ func decodePlan(uploadReader io.Reader) (*Plan, error) {
 	token, err = decoder.RawToken()
 	charData, _ = token.(xml.CharData)
 	dayString := string(charData)
-	dayFormat := "2.6.2006"
+	dayFormat := "2.1.2006"
 	day1, _ := time.ParseInLocation(dayFormat, strings.Split(dayString, " ")[0], loc)
 
 	if err = moveToNext("table", true, decoder); err != nil {
