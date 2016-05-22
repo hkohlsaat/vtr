@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// GetTeachers serves the list of all teachers.
 func GetTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -20,6 +23,7 @@ func GetTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	showTeachers(w, r, "")
 }
 
+// NewTeacher serves the form to create a new teacher.
 func NewTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -37,6 +41,7 @@ func NewTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 }
 
+// CreateTeacher creates a new teacher and serves the list of all teachers.
 func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -77,6 +82,7 @@ func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	showTeachers(w, r, message)
 }
 
+// showTeachers is a helper function to show a list of all teachers.
 func showTeachers(w http.ResponseWriter, r *http.Request, message string) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -105,6 +111,64 @@ func showTeachers(w http.ResponseWriter, r *http.Request, message string) {
 	}
 }
 
+// NewTeachers serves the upload form to submit multiple teacher records.
+func NewTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	template, err := template.ParseFiles("templates/base.html", "templates/teacher/upload.html")
+	if err != nil {
+		log.Printf("error: %v\n", err)
+	}
+
+	err = template.Execute(w, nil)
+	if err != nil {
+		log.Printf("error: %v\n", err)
+	}
+}
+
+// CreateTeachers creates multiple teachers from json upload and serves the list
+// of all teachers.
+func CreateTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
+	r.ParseMultipartForm(16384)
+	file, _, err := r.FormFile("teacherjson")
+	if err != nil {
+		log.Printf("error recieving teacher file from upload: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Printf("error reading teacher file: %v\n", err)
+		return
+	}
+
+	type tmpTeacher struct {
+		model.Teacher
+		Compellation string
+	}
+	teachers := []tmpTeacher{}
+	err = json.Unmarshal(bytes, &teachers)
+	if err != nil {
+		log.Printf("error unmarshaling teacher data: %v\n", err)
+		return
+	}
+	for _, teacher := range teachers {
+		if teacher.Compellation == "Herr" {
+			teacher.Sex = 'm'
+		} else {
+			teacher.Sex = 'w'
+		}
+		teacher.Create()
+	}
+
+	http.Redirect(w, r, "/teachers", http.StatusSeeOther)
+}
+
+// GetTeacher serves one teacher.
 func GetTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -135,6 +199,7 @@ func GetTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	}
 }
 
+// EditTeacher serves a form to edit a teacher.
 func EditTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -166,6 +231,7 @@ func EditTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Param
 	}
 }
 
+// UpdateTeacher updates a teacher with the uploaded information.
 func UpdateTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -194,6 +260,7 @@ func UpdateTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Par
 	w.Write([]byte(fmt.Sprintf("/teacher/%s", nshort)))
 }
 
+// DeleteTeacher deletes a teacher and serves nothing (empty 200 OK response).
 func DeleteTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {

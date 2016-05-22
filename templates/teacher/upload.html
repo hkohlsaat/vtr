@@ -1,0 +1,10 @@
+{{define "head"}}<title>Neuer Lehrer</title>
+<link rel="stylesheet" href="/static/styles/teacher/new.css">{{end}}
+{{define "content"}}
+<h1>Neue Lehrer</h1>
+<form action="/teachers/upload" method="post" enctype="multipart/form-data">
+	<input name="teacherjson" type="file" accept="application/json">
+	<input id="save" type="submit" value="Hochladen">
+</form>
+{{end}}
+

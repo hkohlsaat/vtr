@@ -1,0 +1,10 @@
+{{define "head"}}<title>Neue Fächer</title>
+<link rel="stylesheet" href="/static/styles/subject/new.css">{{end}}
+{{define "content"}}
+<h1>Neue Fächer</h1>
+<form action="/subjects/upload" method="post" enctype="multipart/form-data">
+	<input name="subjectjson" type="file" accept="application/json">
+	<input id="save" type="submit" value="Hochladen">
+</form>
+{{end}}
+

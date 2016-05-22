@@ -1,9 +1,11 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"html"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// GetSubjects serves the list of all subjects.
 func GetSubjects(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -20,6 +23,7 @@ func GetSubjects(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	showSubjects(w, r, "")
 }
 
+// NewSubject serves the form to create a new subject.
 func NewSubject(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -37,6 +41,7 @@ func NewSubject(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 }
 
+// CreateSubject creates a new subject and serves the list of all subjects.
 func CreateSubject(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -77,6 +82,7 @@ func CreateSubject(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	showSubjects(w, r, message)
 }
 
+// showSubjects is a helper function to show a list of all subjects.
 func showSubjects(w http.ResponseWriter, r *http.Request, message string) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -105,6 +111,62 @@ func showSubjects(w http.ResponseWriter, r *http.Request, message string) {
 	}
 }
 
+// NewSubjects serves the upload form to submit multiple subject records.
+func NewSubjects(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	template, err := template.ParseFiles("templates/base.html", "templates/subject/upload.html")
+	if err != nil {
+		log.Printf("error: %v\n", err)
+	}
+
+	err = template.Execute(w, nil)
+	if err != nil {
+		log.Printf("error: %v\n", err)
+	}
+}
+
+// CreateSubjects creates multiple subjects from json upload and serves the list
+// of all subjects.
+func CreateSubjects(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	redirected, _ := ensureLoggedIn(w, r)
+	if redirected {
+		return
+	}
+
+	r.ParseMultipartForm(16384)
+	file, _, err := r.FormFile("subjectjson")
+	if err != nil {
+		log.Printf("error recieving subject file from upload: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	bytes, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Printf("error reading subject file: %v\n", err)
+		return
+	}
+
+	type tmpSubject struct {
+		model.Subject
+		ConcurrentlyTaught bool
+	}
+	subjects := []tmpSubject{}
+	err = json.Unmarshal(bytes, &subjects)
+	if err != nil {
+		log.Printf("error unmarshaling subject data: %v\n", err)
+		return
+	}
+	for _, subject := range subjects {
+		if subject.ConcurrentlyTaught {
+			subject.SplitClass = true
+		}
+		subject.Create()
+	}
+
+	http.Redirect(w, r, "/subjects", http.StatusSeeOther)
+}
+
+// GetSubject serves one subject.
 func GetSubject(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -135,6 +197,7 @@ func GetSubject(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	}
 }
 
+// EditSubject serves a form to edit a subject.
 func EditSubject(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -166,6 +229,7 @@ func EditSubject(w http.ResponseWriter, r *http.Request, params httprouter.Param
 	}
 }
 
+// UpdateSubject updates a subject with the uploaded information.
 func UpdateSubject(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
@@ -194,6 +258,7 @@ func UpdateSubject(w http.ResponseWriter, r *http.Request, params httprouter.Par
 	w.Write([]byte(fmt.Sprintf("/subject/%s", nshort)))
 }
 
+// DeleteSubject deletes a subject and serves nothing (empty 200 OK response).
 func DeleteSubject(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
