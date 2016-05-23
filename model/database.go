@@ -25,5 +25,7 @@ func init() {
 		db.CreateTable(&Subject{})
 		db.CreateTable(&User{})
 		db.CreateTable(&dbPlan{})
+		db.CreateTable(&UnknownTeacher{})
+		db.CreateTable(&UnknownSubject{})
 	}
 }

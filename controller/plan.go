@@ -3,6 +3,7 @@ package controller
 import (
 	"io"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"time"
@@ -22,6 +23,10 @@ func PostPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		log.Printf("error recieving file from upload: %v\n", err)
 		return
 	}
+	go processPlan(file)
+}
+
+func processPlan(file multipart.File) {
 	defer file.Close()
 
 	now := time.Now()
@@ -40,6 +45,23 @@ func PostPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 	plan.Create()
+
+	for _, part := range plan.Parts {
+		for _, s := range part.Substitutions {
+			if s.SubstTeacher.Name == "" && s.SubstTeacher.Short != "" {
+				unknownTeacher := model.UnknownTeacher{Short: s.SubstTeacher.Short}
+				unknownTeacher.Create()
+			}
+			if s.InstdTeacher.Name == "" && s.InstdTeacher.Short != "" {
+				unknownTeacher := model.UnknownTeacher{Short: s.InstdTeacher.Short}
+				unknownTeacher.Create()
+			}
+			if s.InstdSubject.Name == "" && s.InstdSubject.Short != "" {
+				unknownSubject := model.UnknownSubject{Short: s.InstdSubject.Short}
+				unknownSubject.Create()
+			}
+		}
+	}
 }
 
 func GetPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

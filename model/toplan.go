@@ -227,7 +227,7 @@ func refine(plan *Plan) {
 				substitution.SubstTeacher.Short == "+" || substitution.SubstTeacher.Short == "---" {
 				plan.Parts[p].Substitutions[s].SubstTeacher.Short = ""
 			} else {
-				substitution.SubstTeacher.Read()
+				plan.Parts[p].Substitutions[s].SubstTeacher.Read()
 			}
 			if substitution.InstdTeacher.Short == nbsp {
 				plan.Parts[p].Substitutions[s].InstdTeacher.Short = ""
