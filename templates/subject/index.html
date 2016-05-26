@@ -13,6 +13,7 @@
 		<td><a href="/subject/{{.Short}}" class="delete">Löschen</a></td>
 	</tr>{{end}}
 </table>
+{{if .Unknown}}<p>Diese Kürzel sind unbekannt: {{range .Unknown}}<a href="/subjects/new?short={{.Short}}">{{.Short}}</a> {{end}}</p>{{end}}
 <a href="/subjects/new">Neues Fach</a>
 <script>
 $(document).ready(function() {

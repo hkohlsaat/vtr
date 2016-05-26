@@ -1,41 +1,43 @@
 package model
 
 type UnknownTeacher struct {
-	Short string `gorm:"unique_index"`
+	Short string
 }
 
-func (unknownTeacher *UnknownTeacher) Create() {
-	if db.NewRecord(*unknownTeacher) {
-		db.Create(unknownTeacher)
-	}
+const unknown_schema = "CREATE TABLE unknown_teachers (short TEXT UNIQUE);CREATE TABLE unknown_subjects (short TEXT UNIQUE)"
+
+func (ut *UnknownTeacher) Create() {
+	stmt := `INSERT INTO unknown_teachers (short) VALUES (?)`
+	db.Exec(stmt, ut.Short)
 }
 
 func ReadAllUnknownTeachers() []UnknownTeacher {
 	var unknownTeachers []UnknownTeacher
-	db.Find(&unknownTeachers)
+	db.Select(&unknownTeachers, "SELECT short FROM unknown_teachers")
 	return unknownTeachers
 }
 
-func (unknownTeacher *UnknownTeacher) Delete() {
-	db.Where(unknownTeacher).Delete(UnknownTeacher{})
+func (ut *UnknownTeacher) Delete() {
+	stmt := `DELETE FROM unknown_teachers WHERE short = ?`
+	db.Exec(stmt, ut.Short)
 }
 
 type UnknownSubject struct {
-	Short string `gorm:"unique_index"`
+	Short string
 }
 
-func (unknownUnknownSubject *UnknownSubject) Create() {
-	if db.NewRecord(*unknownUnknownSubject) {
-		db.Create(unknownUnknownSubject)
-	}
+func (us *UnknownSubject) Create() {
+	stmt := `INSERT INTO unknown_subjects (short) VALUES (?)`
+	db.Exec(stmt, us.Short)
 }
 
 func ReadAllUnknownSubjects() []UnknownSubject {
-	var unknownUnknownSubjects []UnknownSubject
-	db.Find(&unknownUnknownSubjects)
-	return unknownUnknownSubjects
+	var unknownSubjects []UnknownSubject
+	db.Select(&unknownSubjects, "SELECT short FROM unknown_subjects")
+	return unknownSubjects
 }
 
-func (unknownUnknownSubject *UnknownSubject) Delete() {
-	db.Where(unknownUnknownSubject).Delete(UnknownSubject{})
+func (us *UnknownSubject) Delete() {
+	stmt := `DELETE FROM unknown_subjects WHERE short = ?`
+	db.Exec(stmt, us.Short)
 }

@@ -23,6 +23,7 @@ func init() {
 		db.MustExec(subject_schema)
 		db.MustExec(user_schema)
 		db.MustExec(plan_schema)
+		db.MustExec(unknown_schema)
 	}
 }
 

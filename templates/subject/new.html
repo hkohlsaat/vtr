@@ -3,7 +3,7 @@
 {{define "content"}}
 <h1>Neues Fach</h1>
 <form action="/subjects" method="post" enctype="application/x-www-form-urlencoded">
-	<input id="short" type="text" name="short" placeholder="Kürzel" />
+	<input id="short" type="text" name="short" placeholder="Kürzel" value="{{.Short}}" />
 	<input type="text" name="name" placeholder="Name" />
 	<input id="check" type="checkbox" name="splitClass" value="true" /> Verschiedene Kurse gleichzeitig<br>
 	<input id="save" type="submit" value="Speichern" />

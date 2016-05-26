@@ -14,7 +14,7 @@ const subject_schema = `CREATE TABLE subjects (short text, name text, splitclass
 // returns a slice with all subjects found.
 func ReadAllSubjects() []Subject {
 	var subjects []Subject
-	db.Select(&subjects, `SELECT short, name, splitclass FROM subjects`)
+	db.Select(&subjects, `SELECT short, name, splitclass FROM subjects ORDER BY name asc`)
 
 	return subjects
 }

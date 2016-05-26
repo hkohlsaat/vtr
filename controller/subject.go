@@ -30,12 +30,18 @@ func NewSubject(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
+	short := html.EscapeString(r.URL.Query().Get("short"))
+	templateData := struct {
+		generalTemplateData
+		Short string
+	}{Short: short}
+
 	template, err := template.ParseFiles("templates/base.html", "templates/subject/new.html")
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
 
-	err = template.Execute(w, nil)
+	err = template.Execute(w, templateData)
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
@@ -77,6 +83,9 @@ func CreateSubject(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	subject := model.Subject{Short: short, Name: name, SplitClass: splitClass}
 	subject.Create()
 
+	unknown := model.UnknownSubject{Short: short}
+	unknown.Delete()
+
 	// Render all subjects
 	message = fmt.Sprintf("%s wurde gespeichert.", name)
 	showSubjects(w, r, message)
@@ -93,7 +102,9 @@ func showSubjects(w http.ResponseWriter, r *http.Request, message string) {
 	templateData := struct {
 		generalTemplateData
 		Subjects []model.Subject
-	}{Subjects: model.ReadAllSubjects()}
+		Unknown  []model.UnknownSubject
+	}{Subjects: model.ReadAllSubjects(),
+		Unknown: model.ReadAllUnknownSubjects()}
 	// Add the message if there is one.
 	if message != "" {
 		templateData.Messages = []templateMessage{templateMessage{Text: message, Positive: true}}
@@ -161,6 +172,9 @@ func CreateSubjects(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 			subject.SplitClass = true
 		}
 		subject.Create()
+
+		unknown := model.UnknownSubject{Short: subject.Short}
+		unknown.Delete()
 	}
 
 	http.Redirect(w, r, "/subjects", http.StatusSeeOther)

@@ -14,7 +14,7 @@ const teacher_schema = `CREATE TABLE teachers (short TEXT UNIQUE, name TEXT, sex
 // returns a slice with all teachers found.
 func ReadAllTeachers() []Teacher {
 	var teachers []Teacher
-	db.Select(&teachers, `SELECT short, name, sex FROM teachers`)
+	db.Select(&teachers, `SELECT short, name, sex FROM teachers ORDER BY name asc`)
 
 	return teachers
 }

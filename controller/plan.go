@@ -41,15 +41,15 @@ func processPlan(file multipart.File) {
 
 	for _, part := range plan.Parts {
 		for _, s := range part.Substitutions {
-			if s.SubstTeacher.Name == "" && s.SubstTeacher.Short != "" {
+			if !s.SubstTeacher.Exists() {
 				unknownTeacher := model.UnknownTeacher{Short: s.SubstTeacher.Short}
 				unknownTeacher.Create()
 			}
-			if s.InstdTeacher.Name == "" && s.InstdTeacher.Short != "" {
+			if !s.InstdTeacher.Exists() {
 				unknownTeacher := model.UnknownTeacher{Short: s.InstdTeacher.Short}
 				unknownTeacher.Create()
 			}
-			if s.InstdSubject.Name == "" && s.InstdSubject.Short != "" {
+			if !s.InstdSubject.Exists() {
 				unknownSubject := model.UnknownSubject{Short: s.InstdSubject.Short}
 				unknownSubject.Create()
 			}
