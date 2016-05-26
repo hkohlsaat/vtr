@@ -14,42 +14,48 @@ var (
 	ErrNoMatchNamePassword = errors.New("model: wrong username or password")
 )
 
-// User struct conveys user data, primarily the user's name.
+// User represents a user associating his identification and authentification information.
 type User struct {
 	ID       uint
-	Name     string `gorm:"unique_index"`
+	Name     string
 	Password string
 }
 
-// UsernameTaken returns true if the username in name is already in use and therefore
-// can't be used by a second user.
-func UsernameTaken(name string) bool {
-	var user User
-	db.Where(&User{Name: name}).First(&user)
-	return user != User{}
-}
+const user_schema = `CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT UNIQUE, password TEXT)`
 
-// CountUsers returns the total of registered users in the database.
+// CountUsers returns the total of recorded users in the database.
 func CountUsers() int {
 	var count int
-	db.Model(&User{}).Count(&count)
+	db.Get(&count, "SELECT count(*) FROM users")
 	return count
 }
 
-// Create inserts this new user into the database.
-// *user should only convey the name of this new user.
-func (user *User) Create(password string) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatalf("Could't generate hashed password: %v\n", err)
-	}
-	user.Password = string(hash)
-	db.Create(user)
+// UsernameTaken returns true if the username is already in use and therefore
+// can't be taken by a second user.
+func (u *User) Exists() bool {
+	var count int
+	db.Get(&count, "SELECT count(*) FROM users WHERE name = ?", u.Name)
+	return count > 0
 }
 
-// Read makes user to point to the user with the name user.Name.
-func (user *User) Read() {
-	db.Where(user).First(user)
+// Create inserts this new user into the database.
+// The user receiver should only convey the name of this new user.
+func (u *User) Create(password string) {
+	if !u.Exists() {
+		hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Fatalf("Couldn't generate hashed password: %v", err)
+		}
+		u.Password = string(hash)
+
+		stmt := `INSERT INTO users(name, password) VALUES (?, ?)`
+		db.Exec(stmt, u.Name, u.Password)
+	}
+}
+
+// Read completes the user with the information associated with this user's name.
+func (u *User) Read() {
+	db.Get(u, "SELECT id, password FROM users WHERE name = ?", u.Name)
 }
 
 // GetWithPassword finds out whether the given password matches the password of user.
@@ -66,14 +72,15 @@ func (user *User) Read() {
 //	default:
 //		// Some kind of internal error.
 //	}
-func (user *User) GetWithPassword(password string) error {
-	var readUser User
-	db.Where(user).First(&readUser)
-	if readUser.Name == user.Name {
-		err := bcrypt.CompareHashAndPassword([]byte(readUser.Password), []byte(password))
+func (u *User) GetWithPassword(password string) error {
+	var user User
+	db.Get(&user, "SELECT id, name, password FROM users WHERE name = ?", u.Name)
+
+	if user.Name == u.Name {
+		err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 		switch {
 		case err == nil:
-			*user = readUser
+			*u = user
 			return nil
 		case err == bcrypt.ErrMismatchedHashAndPassword:
 			return ErrNoMatchNamePassword
@@ -88,22 +95,27 @@ func (user *User) GetWithPassword(password string) error {
 // Update saves this user (changes the information in the existing entry).
 // The user should have been read before (with the Read method).
 // For updating the password use UpdatePassword.
-func (user *User) Update() {
-	db.Save(user)
+func (u *User) Update() {
+	stmt := `UPDATE users SET name = ? WHERE id = ?`
+	db.Exec(stmt, u.Name, u.ID)
 }
 
 // UpdatePassword saves the new password (hash) into the existing user's entry.
 // This method hashes the password properly.
-func (user *User) UpdatePassword(password string) {
+func (u *User) UpdatePassword(password string) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Fatalf("Couldn't generate hashed password: %v\n", err)
 	}
-	user.Password = string(hash)
-	db.Save(user)
+
+	u.Password = string(hash)
+
+	stmt := `UPDATE users SET name = ?, password = ? WHERE id = ?`
+	db.Exec(stmt, u.Name, u.Password, u.ID)
 }
 
-// Delete removes the user from the database.
-func (user *User) Delete() {
-	db.Where(user).Delete(User{})
+// Delete removes this user from the database.
+func (u *User) Delete() {
+	stmt := `DELETE FROM users WHERE id = ?`
+	db.Exec(stmt, u.ID)
 }

@@ -49,7 +49,11 @@ func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	}
 
 	// Parse and validate.
-	short, name, sex := parseTeacherData(r)
+	r.ParseForm()
+	short := html.EscapeString(r.Form.Get("short"))
+	name := html.EscapeString(r.Form.Get("name"))
+	sex := html.EscapeString(r.Form.Get("sex"))
+
 	valid, message := validateTeacherData(short, name, sex)
 	if valid {
 		teacher := model.Teacher{Short: short}
@@ -158,9 +162,9 @@ func CreateTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	}
 	for _, teacher := range teachers {
 		if teacher.Compellation == "Herr" {
-			teacher.Sex = 'm'
+			teacher.Sex = "m"
 		} else {
-			teacher.Sex = 'w'
+			teacher.Sex = "w"
 		}
 		teacher.Create()
 	}
@@ -180,6 +184,8 @@ func GetTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params
 	if !teacher.Exists() {
 		http.NotFound(w, r)
 		return
+	} else {
+		teacher.Read()
 	}
 
 	// Execute template with teacher as template data.
@@ -212,6 +218,7 @@ func EditTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Param
 		http.NotFound(w, r)
 		return
 	}
+	teacher.Read()
 
 	// Execute template with teacher as template data.
 	template, err := template.ParseFiles("templates/base.html", "templates/teacher/edit.html")
@@ -246,7 +253,11 @@ func UpdateTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Par
 	}
 
 	// Parse and validate teacher data.
-	nshort, name, sex := parseTeacherData(r)
+	r.ParseForm()
+	nshort := html.EscapeString(r.Form.Get("short"))
+	name := html.EscapeString(r.Form.Get("name"))
+	sex := html.EscapeString(r.Form.Get("sex"))
+
 	valid, message := validateTeacherData(short, name, sex)
 	if !valid {
 		http.Error(w, message, http.StatusNotAcceptable)
@@ -277,20 +288,9 @@ func DeleteTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Par
 	}
 }
 
-func parseTeacherData(r *http.Request) (short, name string, sex rune) {
-	r.ParseForm()
-	short = html.EscapeString(r.Form.Get("short"))
-	name = html.EscapeString(r.Form.Get("name"))
-	_sex := html.EscapeString(r.Form.Get("sex"))
-	if len(_sex) > 0 {
-		sex = rune(_sex[0])
-	}
-	return
-}
-
-func validateTeacherData(short, name string, sex rune) (valid bool, message string) {
-	if sex != 'm' && sex != 'w' {
-		return false, "Falsche Eingabe: Herr: 'm', Frau: 'w'"
+func validateTeacherData(short, name, sex string) (valid bool, message string) {
+	if sex != "m" && sex != "w" {
+		return false, "Falsche Eingabe: Herr: \"m\", Frau: \"w\""
 	} else if len(short) == 0 {
 		return false, "Das Kürzel ist zu kurz."
 	} else if len(name) == 0 {

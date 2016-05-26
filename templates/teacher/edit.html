@@ -5,8 +5,8 @@
 <h1>{{.Short}} ändern</h1>
 <form method="/teacher/{{.Short}}" enctype="application/x-www-form-urlencoded">
 	<select name="sex">
-		<option value="m" {{if eq .Sex 'm'}}selected="selected"{{end}}>Herr</option>
-		<option value="w" {{if eq .Sex 'w'}}selected="selected"{{end}}>Frau</option>
+		<option value="m" {{if eq .Sex "m"}}selected="selected"{{end}}>Herr</option>
+		<option value="w" {{if eq .Sex "w"}}selected="selected"{{end}}>Frau</option>
 	</select>
 	<input type="text" name="short" placeholder="Kürzel" value="{{.Short}}"/>
 	<input type="text" name="name" placeholder="Name" value="{{.Name}}"/><br>

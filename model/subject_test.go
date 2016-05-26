@@ -2,93 +2,145 @@ package model
 
 import "testing"
 
+// Subject dummies.
+var s = []Subject{
+	Subject{Short: "Md", Name: "Melden", SplitClass: false},
+	Subject{Short: "Lm", Name: "Lärmen", SplitClass: true},
+	Subject{Short: "Zl", Name: "Zählen", SplitClass: false}}
+
 func TestSubjectCreate(t *testing.T) {
-	subject := &Subject{Short: "Zk", Name: "Zauberkunst", SplitClass: false}
+	// Create a subject.
+	subject := s[0]
 	subject.Create()
-	subject = &Subject{Short: "Zk"}
-	subject.Read()
-	if subject.Name != "Zauberkunst" || subject.SplitClass != false {
-		t.Fail()
+
+	// Check existence.
+	var count int
+	if db.Get(&count, "SELECT count(*) FROM subjects WHERE short = ?", s[0].Short); count == 0 {
+		t.Error("Subject wasn't created.")
 	}
 }
 
 func TestSubjectRead(t *testing.T) {
-	subject := &Subject{Short: "Zk"}
+	// Read subject by short.
+	subject := Subject{Short: s[0].Short}
 	subject.Read()
-	if subject.Name != "Zauberkunst" {
-		t.Fail()
+
+	if subject.Name != s[0].Name {
+		t.Errorf("Subject was not read as expected: (%+v) actual: %+v", s[0], subject)
 	}
-	subject = &Subject{Short: "Yt"}
+
+	// Read another subject by short. This one doesn't exists.
+	subject = Subject{Short: s[1].Short}
 	subject.Read()
-	if subject.Short != "Yt" || subject.Name != "" || subject.SplitClass != false {
-		t.Fail()
+
+	if subject.Short != s[1].Short || subject.Name != "" || subject.SplitClass != false {
+		t.Errorf("Subject was unexpectedly read: %+v", subject)
 	}
 }
 
 func TestSubjectExists(t *testing.T) {
-	subject := &Subject{Short: "Zk"}
+	// Test that subject exists.
+	subject := Subject{Short: s[0].Short}
 	if !subject.Exists() {
-		t.Error("didn't recognise existing subject")
+		t.Error("Existent subject was not recognized.")
 	}
-	subject = &Subject{Short: "No"}
+
+	// Test that subject exists not.
+	subject = Subject{Short: s[1].Short}
 	if subject.Exists() {
-		t.Error("did recognise non existing subject")
+		t.Error("Non existent subject was recognized.")
 	}
 }
 
 func TestSubjectUpdate(t *testing.T) {
-	subject := &Subject{Short: "Zk", Name: "Zehnkampf", SplitClass: true}
+	// Change Name and SplitClass.
+	newName := s[1].Name
+	subject := Subject{Short: s[0].Short, Name: newName, SplitClass: s[0].SplitClass}
 	subject.Update()
-	subject = &Subject{Short: "Zk"}
+
+	// Test that subject.
+	subject = Subject{Short: s[0].Short}
 	subject.Read()
-	if subject.Name != "Zehnkampf" || subject.SplitClass != true {
-		t.Fail()
+	if subject.Name != newName || subject.SplitClass != s[0].SplitClass {
+		t.Error("Subject was read with old values after update.")
 	}
 }
 
 func TestSubjectUpdateShort(t *testing.T) {
-	subject := &Subject{Short: "Hh", Name: "Hundehutte", SplitClass: false}
-	subject.UpdateShort("Zk")
-	subject = &Subject{Short: "Zk"}
-	subject.Read()
-	if subject.Name != "" {
-		t.Error("didn't update short")
+	// Change Short, Name and SplitClass.
+	subject := s[1]
+	subject.UpdateShort(s[0].Short)
+
+	// Read old short. There shouldn't be anything to read.
+	subject = Subject{Short: s[0].Short}
+	if subject.Exists() {
+		t.Error("Subject is still associated with old short after UpdateShort call.")
 	}
-	subject = &Subject{Short: "Hh"}
+
+	// Read updated subject.
+	subject = Subject{Short: s[1].Short}
 	subject.Read()
-	if subject.Name != "Hundehutte" || (subject.SplitClass != false) {
-		t.Errorf("didn't update subject correctly: %+v", *subject)
+	if subject != s[1] {
+		t.Error("Subject was read with old values after update.")
 	}
 }
 
 func TestReadAllSubjects(t *testing.T) {
-	subjects := []*Subject{&Subject{Short: "t1", Name: "Test1", SplitClass: false}, &Subject{Short: "t2", Name: "Test2", SplitClass: false}}
+	// Count before.
+	lenBefore := len(ReadAllSubjects())
+
+	// Create new records.
+	subjects := []Subject{
+		Subject{Short: "t1", Name: "Test1", SplitClass: false},
+		Subject{Short: "t2", Name: "Test2", SplitClass: true}}
 	subjects[0].Create()
 	subjects[1].Create()
 
-	allSubjects := ReadAllSubjects()
-	if len(allSubjects) != 3 {
-		t.Error("didn't read three subjects")
+	// Read all subjects and test whether the newly created subjects are returned, too.
+	var hasFirst, hasSecond bool
+	var readSubjects = ReadAllSubjects()
+	for _, subject := range readSubjects {
+		if subject == subjects[0] {
+			hasFirst = true
+		}
+		if subject == subjects[1] {
+			hasSecond = true
+		}
+	}
+	if len(readSubjects) != lenBefore+2 {
+		t.Error("The read amount of subjects differs from the expected amount.")
+	}
+	if !hasFirst || !hasSecond {
+		t.Error("Didn't read all subjects.")
 	}
 
+	// Delete the records.
 	subjects[0].Delete()
 	subjects[1].Delete()
 }
 
 func TestSubjectDelete(t *testing.T) {
-	subject := &Subject{Short: "Yt", Name: "Yetikunde", SplitClass: true}
+	// Create new record.
+	subject := s[2]
 	subject.Create()
-	subject = &Subject{Short: "Zk"}
+
+	// Delete the subject.
+	subject = s[1]
 	subject.Delete()
-	subject = &Subject{Short: "Zk"}
-	subject.Read()
-	if subject.Short != "Zk" || subject.Name != "" || subject.SplitClass != false {
-		t.Fail()
+
+	// Check if it was deleted.
+	subject = Subject{Short: s[1].Short}
+	if subject.Exists() {
+		t.Error("Subject still exists after deletion.")
 	}
-	subject = &Subject{Short: "Yt"}
-	subject.Read()
-	if subject.Short != "Yt" || subject.Name != "Yetikunde" || subject.SplitClass != true {
-		t.Fail()
-	}
+
+	// Delete last subject.
+	subject = s[2]
 	subject.Delete()
+
+	// Check if it was deleted.
+	subject = Subject{Short: s[2].Short}
+	if subject.Exists() {
+		t.Error("Subject still exists after deletion.")
+	}
 }

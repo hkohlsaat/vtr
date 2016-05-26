@@ -7,7 +7,7 @@
 	{{range .Teachers}}
 	<tr>
 		<td>{{.Short}}</td>
-		<td>{{if eq .Sex 'm'}}Herr {{else}}Frau {{end}}{{.Name}}</td>
+		<td>{{if eq .Sex "m"}}Herr {{else}}Frau {{end}}{{.Name}}</td>
 		<td><a href="/teacher/{{.Short}}/edit">Bearbeiten</a></td>
 		<td><a href="/teacher/{{.Short}}" class="delete">Löschen</a></td>
 	</tr>{{end}}

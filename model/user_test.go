@@ -17,7 +17,8 @@ func TestUserCreate(t *testing.T) {
 }
 
 func TestUsernameTaken(t *testing.T) {
-	if !UsernameTaken(defaultUser.Name) || UsernameTaken("Georg") {
+	u := User{Name: "Georg"}
+	if !defaultUser.Exists() || u.Exists() {
 		t.Error("taken usernames not correctly recognised")
 	}
 }
@@ -91,6 +92,7 @@ func TestUserUpdatePassword(t *testing.T) {
 
 func TestUserDelete(t *testing.T) {
 	user := defaultUser
+	user.Read()
 	user.Delete()
 	user = defaultUser
 	user.Read()

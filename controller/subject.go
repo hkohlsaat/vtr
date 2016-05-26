@@ -179,6 +179,7 @@ func GetSubject(w http.ResponseWriter, r *http.Request, params httprouter.Params
 		http.NotFound(w, r)
 		return
 	}
+	subject.Read()
 
 	// Execute template with subject as template data.
 	template, err := template.ParseFiles("templates/base.html", "templates/subject/get.html")
@@ -210,6 +211,7 @@ func EditSubject(w http.ResponseWriter, r *http.Request, params httprouter.Param
 		http.NotFound(w, r)
 		return
 	}
+	subject.Read()
 
 	// Execute template with subject as template data.
 	template, err := template.ParseFiles("templates/base.html", "templates/subject/edit.html")

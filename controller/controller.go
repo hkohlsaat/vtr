@@ -88,7 +88,8 @@ func PostSignup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	var validData bool
 	var message string
-	if model.UsernameTaken(username) {
+	var user = model.User{Name: username}
+	if user.Exists() {
 		message = "Dieser Nutzername ist bereits vergeben."
 	} else if len(password) < 3 {
 		message = "Das Passwort ist zu kurz."
@@ -108,7 +109,6 @@ func PostSignup(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	// Create new user
-	user := model.User{Name: username}
 	user.Create(password)
 	// Login the user
 	login(w, user)

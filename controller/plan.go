@@ -1,11 +1,11 @@
 package controller
 
 import (
-	"io"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/hkohlsaat/vtr/model"
 	"github.com/julienschmidt/httprouter"
@@ -24,31 +24,23 @@ func PostPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 	defer file.Close()
 
-	now := time.Now()
-	f, err := os.OpenFile(now.Format("2006-01-02-15-04-05"), os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		log.Printf("can't open file to save plan: %v\n", err)
-	} else {
-		defer f.Close()
-		io.Copy(f, file)
-	}
-
-	file.Seek(0, 0)
 	plan, err := model.ToPlan(file)
 	if err != nil {
 		log.Printf("can't make an object of the plan: %v\n", err)
 		return
 	}
-	plan.Create()
+	file.Seek(0, 0)
+	bytes, _ := ioutil.ReadAll(file)
+	plan.Create(bytes)
 }
 
 func GetPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	lastPlan := model.LastPlanName()
+	lastPlan := model.LastPlanJSON()
 	if lastPlan == "" {
 		http.NotFound(w, r)
 		return
 	} else {
 		w.Header().Set("content-type", "application/json; charset=utf-8")
-		http.ServeFile(w, r, lastPlan)
+		fmt.Fprintln(w, lastPlan)
 	}
 }

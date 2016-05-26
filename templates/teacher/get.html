@@ -1,8 +1,8 @@
-{{define "head"}}<title>{{if eq .Sex 'm'}}Herr{{else}}Frau{{end}} {{.Name}}</title>
+{{define "head"}}<title>{{if eq .Sex "m"}}Herr{{else}}Frau{{end}} {{.Name}}</title>
 <link rel="stylesheet" href="/static/styles/teacher/new.css">{{end}}
 {{define "content"}}
 <h1>Lehrereintrag</h1>
-{{if eq .Sex 'm'}}Herr{{else}}Frau{{end}} {{.Name}}, {{.Short}}<br><br>
+{{if eq .Sex "m"}}Herr{{else}}Frau{{end}} {{.Name}}, {{.Short}}<br><br>
 <a href="/teacher/{{.Short}}/edit">Bearbeiten</a><br><br>
 <a href="/teachers">Übersicht</a>{{end}}
 
