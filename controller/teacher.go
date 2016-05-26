@@ -24,18 +24,24 @@ func GetTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 // NewTeacher serves the form to create a new teacher.
-func NewTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func NewTeacher(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
 		return
 	}
+
+	short := html.EscapeString(r.URL.Query().Get("short"))
+	templateData := struct {
+		generalTemplateData
+		Short string
+	}{Short: short}
 
 	template, err := template.ParseFiles("templates/base.html", "templates/teacher/new.html")
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
 
-	err = template.Execute(w, nil)
+	err = template.Execute(w, templateData)
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
@@ -81,6 +87,9 @@ func CreateTeacher(w http.ResponseWriter, r *http.Request, _ httprouter.Params) 
 	teacher := model.Teacher{Short: short, Name: name, Sex: sex}
 	teacher.Create()
 
+	unknown := model.UnknownTeacher{Short: short}
+	unknown.Delete()
+
 	// Render all teachers
 	message = fmt.Sprintf("%s wurde gespeichert.", short)
 	showTeachers(w, r, message)
@@ -97,7 +106,9 @@ func showTeachers(w http.ResponseWriter, r *http.Request, message string) {
 	templateData := struct {
 		generalTemplateData
 		Teachers []model.Teacher
-	}{Teachers: model.ReadAllTeachers()}
+		Unknown  []model.UnknownTeacher
+	}{Teachers: model.ReadAllTeachers(),
+		Unknown: model.ReadAllUnknownTeachers()}
 	// Add the message if there is one.
 	if message != "" {
 		templateData.Messages = []templateMessage{templateMessage{Text: message, Positive: true}}
@@ -167,6 +178,9 @@ func CreateTeachers(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 			teacher.Sex = "w"
 		}
 		teacher.Create()
+
+		unknown := model.UnknownTeacher{Short: teacher.Short}
+		unknown.Delete()
 	}
 
 	http.Redirect(w, r, "/teachers", http.StatusSeeOther)
