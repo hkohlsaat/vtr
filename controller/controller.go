@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"html"
 	"html/template"
 	"log"
@@ -22,7 +21,7 @@ type templateMessage struct {
 }
 
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	redirected, session := ensureLoggedIn(w, r)
+	redirected, _ := ensureLoggedIn(w, r)
 	if redirected {
 		return
 	}
@@ -31,7 +30,7 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
-	err = template.Execute(w, simpleMessage(fmt.Sprintf("%+v", session), true))
+	err = template.Execute(w, nil)
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}

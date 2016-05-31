@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/hkohlsaat/vtr/model"
 	"github.com/julienschmidt/httprouter"
@@ -55,6 +56,21 @@ func processPlan(file multipart.File) {
 			}
 		}
 	}
+
+	if len(os.Args) > 2 {
+		sentToFirebase()
+	}
+}
+
+func sentToFirebase() {
+	plan := model.LastPlanJSON()
+	replacer := strings.NewReplacer(`true`, `"true"`, `false`, `"false"`)
+	json := `{"data":` + replacer.Replace(plan) + `}`
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", "https://fcm.googleapis.com/fcm/send", strings.NewReader(json))
+	req.Header.Set("content-type", "application/json")
+	req.Header.Add("Authorisation", "key="+os.Args[2])
+	resp, err := client.Do(req)
 }
 
 func GetPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {

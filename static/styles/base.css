@@ -3,9 +3,24 @@ html, body{
 	padding: 0px;
 	font-family: Arial;
 }
+div#headbar{
+	width: 1000px;
+	margin: 0px auto;
+	background-color: #e0e0ee;
+	padding: 10px;
+}
+div#headbar a {
+	color: black;
+	text-decoration: underline;
+}
+div#headbar a:hover {
+	color: black;
+	text-decoration: none;
+}
 div#content{
 	width: 1000px;
 	margin: 0px auto;
+	padding-bottom: 50px;
 }
 h1{
 	text-align: center;
