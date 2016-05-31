@@ -67,10 +67,16 @@ func sentToFirebase() {
 	replacer := strings.NewReplacer(`true`, `"true"`, `false`, `"false"`)
 	json := `{"data":` + replacer.Replace(plan) + `}`
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", "https://fcm.googleapis.com/fcm/send", strings.NewReader(json))
+	req, _ := http.NewRequest("POST", "https://fcm.googleapis.com/fcm/send", strings.NewReader(json))
 	req.Header.Set("content-type", "application/json")
 	req.Header.Add("Authorisation", "key="+os.Args[2])
 	resp, err := client.Do(req)
+	if resp.StatusCode == 200 {
+		log.Printf("calling firebase: response code: %d", resp.StatusCode)
+	}
+	if err != nil {
+		log.Printf("error calling firebase: %v", err)
+	}
 }
 
 func GetPlan(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
