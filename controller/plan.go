@@ -57,23 +57,29 @@ func processPlan(file multipart.File) {
 		}
 	}
 
-	if len(os.Args) > 2 {
-		sentToFirebase()
+	if len(os.Args) > 3 {
+		//	sentToFirebase()
 	}
 }
 
 func sentToFirebase() {
-	plan := model.LastPlanJSON()
-	replacer := strings.NewReplacer(`true`, `"true"`, `false`, `"false"`)
-	json := `{"data":` + replacer.Replace(plan) + `}`
+	json := `{
+		"to":"/topics/newplan",
+		"collapse_key":"newplan",
+		"delay_while_idle":true,
+		"data":{"event":"newplan"}
+		}`
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", "https://fcm.googleapis.com/fcm/send", strings.NewReader(json))
 	req.Header.Set("content-type", "application/json")
-	req.Header.Add("Authorisation", "key="+os.Args[2])
+	req.Header.Add("Authorization", "key="+os.Args[3])
 	resp, err := client.Do(req)
-	if resp.StatusCode == 200 {
-		log.Printf("calling firebase: response code: %d", resp.StatusCode)
-	}
+	//	if resp.StatusCode != 200 {
+	log.Printf("calling firebase: response code: %d", resp.StatusCode)
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	log.Print(string(body))
+	//	}
 	if err != nil {
 		log.Printf("error calling firebase: %v", err)
 	}
