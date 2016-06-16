@@ -5,7 +5,6 @@
 {{template "head" .}}
 </head>
 <body>
-{{template "scripts" .}}
 {{template "headbar" .}}
 <div id="content">
 {{if .}}
@@ -17,6 +16,5 @@
 </body>
 </html>
 
-{{define "scripts"}}{{end}}
 {{define "headbar"}}
 <div id="headbar">Navigation: <a href="/teachers">Lehrer</a> <a href="/subjects">Fächer</a></div>{{end}}
