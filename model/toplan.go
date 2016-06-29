@@ -223,7 +223,7 @@ func refine(plan *Plan) {
 			if substitution.Class == nbsp {
 				plan.Parts[p].Substitutions[s].Class = ""
 			}
-			if substitution.SubstTeacher.Short == nbsp ||
+			if substitution.SubstTeacher.Short == nbsp || substitution.SubstTeacher.Short == "???" ||
 				substitution.SubstTeacher.Short == "+" || substitution.SubstTeacher.Short == "---" {
 				plan.Parts[p].Substitutions[s].SubstTeacher.Short = ""
 			} else {
@@ -241,6 +241,8 @@ func refine(plan *Plan) {
 			}
 			if substitution.Kind == nbsp {
 				plan.Parts[p].Substitutions[s].Kind = ""
+			} else if substitution.Kind == "Statt-Vertretung" {
+				plan.Parts[p].Substitutions[s].Kind = "Vertretung"
 			}
 			if substitution.Text == nbsp {
 				plan.Parts[p].Substitutions[s].Text = ""
