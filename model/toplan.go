@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -246,6 +247,15 @@ func refine(plan *Plan) {
 			}
 			if substitution.Text == nbsp {
 				plan.Parts[p].Substitutions[s].Text = ""
+			} else {
+				re := regexp.MustCompile("Aufg(\\.|(abe)) [A-Za-z]{2,3}")
+				task := re.FindString(substitution.Text)
+				if task != "" {
+					provider := strings.Trim(task[len(task)-3:], " ")
+					taskProvider := Teacher{Short: provider}
+					taskProvider.Read()
+					plan.Parts[p].Substitutions[s].TaskProvider = taskProvider
+				}
 			}
 		}
 	}
