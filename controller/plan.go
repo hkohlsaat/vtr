@@ -58,7 +58,7 @@ func processPlan(file multipart.File) {
 	}
 
 	if len(os.Args) > 3 {
-		//	sentToFirebase()
+		sentToFirebase()
 	}
 }
 
@@ -74,12 +74,12 @@ func sentToFirebase() {
 	req.Header.Set("content-type", "application/json")
 	req.Header.Add("Authorization", "key="+os.Args[3])
 	resp, err := client.Do(req)
-	//	if resp.StatusCode != 200 {
-	log.Printf("calling firebase: response code: %d", resp.StatusCode)
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-	log.Print(string(body))
-	//	}
+	if resp.StatusCode != 200 {
+		log.Printf("calling firebase: response code: %d", resp.StatusCode)
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Print(string(body))
+	}
 	if err != nil {
 		log.Printf("error calling firebase: %v", err)
 	}
